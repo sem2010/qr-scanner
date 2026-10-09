@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>QR 스캔</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Malgun Gothic', sans-serif;
+      background: #111;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h2 { margin-bottom: 20px; font-size: 18px; }
+    #reader {
+      width: 100%;
+      max-width: 340px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 16px;
+      color: #4caf50;
+      text-align: center;
+    }
+    .close-btn {
+      margin-top: 24px;
+      padding: 12px 32px;
+      background: #e53935;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>📷 QR 코드 스캔</h2>
+  <div id="reader"></div>
+  <div id="result">카메라를 QR 코드에 가져다 대세요</div>
+  <button class="close-btn" onclick="window.close()">✕ 닫기</button>
+
+  <script>
+    const html5QrCode = new Html5Qrcode("reader");
+
+    html5QrCode.start(
+      { facingMode: "environment" },   // 후면 카메라
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        // 스캔 성공
+        document.getElementById('result').textContent = `✅ 스캔 완료: ${decodedText}`;
+        html5QrCode.stop();
+
+        // 부모 웹앱으로 결과 전송
+        if (window.opener) {
+          window.opener.postMessage(
+            { type: 'QR_SCANNED', value: decodedText },
+            '*'
+          );
+        }
+        // 1초 후 자동 닫기
+        setTimeout(() => window.close(), 1000);
+      },
+      (errorMsg) => { /* 스캔 중 일시 오류 — 무시 */ }
+    ).catch(err => {
+      document.getElementById('result').textContent =
+        '❌ 카메라 접근 실패. 브라우저 설정에서 카메라 권한을 허용해주세요.';
+    });
+  </script>
+</body>
+</html>
